@@ -3,10 +3,17 @@ const PLAYER_Y = height() - MARGIN;
 const SPEED = 250;
 const ENEMY_SPEED = 10;
 const BULLET_SPEED = 350;
+const BONUS_SPEED = 30;
+
+const WAVE_ROWS = 4;
+const WAVE_COLS = 11;
+const WAVE_TIME_SECONDS = 4;
 
 
 loadSprite("mark", "gfx/mark.png");
 loadSprite("notmark", "gfx/notmark.png");
+loadSprite("bean", "gfx/bean.png");
+// loadSprite("enemybullet", "gfx/enemybullet.png");
 
 scene("main", (hiScore = 0) => {
     let score = 0;
@@ -87,7 +94,9 @@ scene("main", (hiScore = 0) => {
     let die = () => {
         dead = true;
         destroy(player);
+        destroyAll("bullet");
         shake(12);
+        makeExplosion(player.pos, 20, 120, 30, 0.5)
         wait(2, () => {
             go("menu", hiScore);
         });
@@ -95,12 +104,19 @@ scene("main", (hiScore = 0) => {
 
     // Enemy
     let spawnWave = () => {
-        for (let x = 0; x < 11; x++) {
-            for (let y = 0; y < 5; y++) {
-                spawnEnemy(pos(MARGIN * 2 + x * 35 , MARGIN * 2 + y * 30))
+        for (let x = 0; x < WAVE_COLS; x++) {
+            for (let y = 0; y < WAVE_ROWS; y++) {
+                spawnEnemy(pos(MARGIN * 2 + x * 35 , MARGIN * 3 + y * 30))
             }
         }
     };
+    let checkSpawnNewWave = () => {
+        if (get("enemy").length === 0) {
+            wait(WAVE_TIME_SECONDS, () => {
+                spawnWave();
+            })
+        }
+    }
     let spawnEnemy = (position) => {
         add([
             sprite("notmark"),
@@ -108,6 +124,7 @@ scene("main", (hiScore = 0) => {
             position,
             origin("center"),
             area(),
+            rotate(0),
             "enemy"
         ])
     };
@@ -118,6 +135,8 @@ scene("main", (hiScore = 0) => {
         shake(3);
         enemySpeedModifer += 0.1;
         score += 20;
+        checkSpawnNewWave();
+        makeExplosion(e.pos, 4, 8, 1);
     });
     onCollide("bullet", "enemyBullet", (b, e) => {
         bulletPresent = false
@@ -125,28 +144,108 @@ scene("main", (hiScore = 0) => {
         destroy(e);
         shake(1);
         score += 5;
+        makeExplosion(e.pos, 3, 6, 1);
     });
     onCollide("player", "enemy", (p, e) => {
         die();
         destroy(e);
+        makeExplosion(e.pos, 4, 8, 1);
     });
     onCollide("player", "enemyBullet", (p, e) => {
         die();
         destroy(e);
+        makeExplosion(e.pos, 4, 8, 1);
     });
     onUpdate("enemy", (e) => {
-        e.angle = Math.sin(100 * time())
+        e.angle = wave(-22, 22, time() * 2);
         if(!dead) {
             e.move(enemyDirection * ENEMY_SPEED * enemySpeedModifer, 0);
             if (e.pos.x > width() - MARGIN || e.pos.x < MARGIN) {
                 enemyDirection = enemyDirection * -1;
                 every("enemy", (e) => {
-                    e.pos.y = e.pos.y + 15
+                    e.pos.y = e.pos.y + 5
                 })
             } 
             if (rand(1, 10000) < 2 + enemySpeedModifer) spawnBullet(e.pos, "enemyBullet");
         }
     });
+
+    // Bonuses
+    let spawnBonus = () => {
+        let direction = rand(-1, 1) > 0 ? 1 : -1;
+        add([
+            sprite("bean"),
+            scale(1),
+            pos(direction > 0 ? -30 : width() + 30, MARGIN * 1.5),
+            origin("center"),
+            area(),
+            rotate(0),
+            "bonus",
+            {
+                dir: direction
+            }
+        ]);
+    }
+    onUpdate("bonus", (bonus) => {
+        bonus.move(bonus.dir * BONUS_SPEED * enemySpeedModifer, 0);
+        bonus.angle = wave(-45, 45, time());
+        if (bonus.pos.x < -50 || bonus.pos.x > width() + 50) {
+            destroy(bonus);
+        }
+
+    });
+    onCollide("bullet", "bonus", (b, e) => {
+        bulletPresent = false
+        destroy(b);
+        destroy(e);
+        shake(3);
+        score += 500;
+        makeExplosion(e.pos, 5, 10, 1);
+    });
+    let spawnBonusLoop = () => {
+        wait(randi(15, 30), () => {
+            spawnBonus();
+            spawnBonusLoop();
+        })
+    }
+
+    // Explode
+    let makeExplosion = (p, n=4, rad=8, size=1, life=0.2) => {
+        for (let i = 0; i < n; i++) {
+            wait(rand(n * 0.1), () => {
+                for (let i = 0; i < 2; i++) {
+                    add([
+                        pos(p.add(rand(vec2(-rad), vec2(rad)))),
+                        rect(1, 1),
+                        scale(1 * size, 1 * size),
+                        lifespan(life),
+                        origin("center"),
+                        "explosion",
+                        {
+                            scaler: rand(20, 100),
+                            time: time()
+                        }
+                    ]);
+                }
+            });
+        }
+    };
+    onUpdate("explosion", (e) => {
+        console.log(time() - e.time);
+        e.scaleTo(e.scaler * (time() - e.time), e.scaler * (time() - e.time))
+    })
+
+    // Play SFX if its unmuted
+    let playSfx = (sfx, volume, detune) => {
+        volume = volume || 1.0;
+        detune = detune || 0;
+        if (!sfxMuted) {
+            play(sfx, {
+                volume: volume,
+                detune: detune,
+            });
+        }
+    };
 
     // Controls
     let move = (x) => {
@@ -168,8 +267,12 @@ scene("main", (hiScore = 0) => {
 
     // Start
     spawnWave();
-
-
+    spawnBonusLoop();
 });
 
-go("main");
+go("menu");
+
+// TODO
+// Enemy bullet zig zags
+// Starfield
+// Barriers

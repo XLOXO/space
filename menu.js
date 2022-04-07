@@ -98,12 +98,12 @@ scene("menu", (hiScore = 0) => {
         sfxText.text = sfxMuted ? "Muted" : "SFX";
     }
 
-    keyPress("space", () => { go("main", hiScore); });
-    keyPress("enter", () => { go("main", hiScore); });
-    keyPress("escape", () => { go("menu", hiScore); });
-    keyPress("1", () => { toggleMusic() });
-    keyPress("2", () => { go('credits', hiScore); });
-    keyPress("3", () => { toggleSfx(); });
+    onKeyPress("space", () => { go("main", hiScore); });
+    onKeyPress("enter", () => { go("main", hiScore); });
+    onKeyPress("escape", () => { go("menu", hiScore); });
+    onKeyPress("1", () => { toggleMusic() });
+    onKeyPress("2", () => { go('credits', hiScore); });
+    onKeyPress("3", () => { toggleSfx(); });
 });
 
 scene("credits", (hiScore = 0) => {
