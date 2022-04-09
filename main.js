@@ -119,7 +119,8 @@ scene("main", (hiScore = 0) => {
         playSfx("gameOver");
         destroyAll("bullet");
         shake(12);
-        makeExplosion(player.pos, 20, 120, 30, 0.5)
+        makeExplosion(player.pos, 20, 40, 30, 0.1)
+        makeExplosion(player.pos, 20, 40, 30, 0.1)
         wait(2, () => {
             go("menu", hiScore);
         });
@@ -251,6 +252,31 @@ scene("main", (hiScore = 0) => {
             spawnBonusLoop();
         })
     }
+    // Starfield
+    let spawnStar = () => {
+        add([
+            rect(1, 1),
+            pos(width() / 2, height() / 2),
+            origin("center"),
+            color(255, 255, 255),
+            lifespan(1),
+            "star",
+            z(-1),
+            {
+                angle: rand(0, 360),
+                speed: rand(10, 20)
+            }
+        ])
+    }
+    onUpdate("star", (s) => {
+        s.pos = s.pos.add(Vec2.fromAngle(s.angle).scale(s.speed));
+    });
+    let spawnStarLoop = () => {
+        wait(rand(0, 0.05), () => {
+            spawnStar();
+            spawnStarLoop();
+        })
+    }
 
     // Explode
     let makeExplosion = (p, n=4, rad=8, size=1, life=0.2) => {
@@ -274,7 +300,6 @@ scene("main", (hiScore = 0) => {
         }
     };
     onUpdate("explosion", (e) => {
-        console.log(time() - e.time);
         e.scaleTo(e.scaler * (time() - e.time), e.scaler * (time() - e.time))
     })
 
@@ -305,12 +330,13 @@ scene("main", (hiScore = 0) => {
     onKeyDown("space", () => { shoot(); });
     onMouseDown(() => { shoot(); });
     // restart
-    onKeyDown("r", () => { go("main", hiScore); });
-    onKeyDown("escape", () => { go("menu", hiScore); });
+    onKeyDown("r", () => { music.stop(); go("main", hiScore); });
+    onKeyDown("escape", () => { music.stop(); go("menu", hiScore); });
 
     // Start
     spawnWave();
     spawnBonusLoop();
+    spawnStarLoop();
 });
 
 go("menu");
