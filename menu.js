@@ -99,6 +99,7 @@ scene("menu", (hiScore = 0) => {
     }
 
     onKeyPress("space", () => { go("main", hiScore); });
+    onKeyPress("r", () => { go("main", hiScore); });
     onKeyPress("enter", () => { go("main", hiScore); });
     onKeyPress("escape", () => { go("menu", hiScore); });
     onKeyPress("1", () => { toggleMusic() });

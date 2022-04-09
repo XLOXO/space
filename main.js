@@ -13,7 +13,22 @@ const WAVE_TIME_SECONDS = 4;
 loadSprite("mark", "gfx/mark.png");
 loadSprite("notmark", "gfx/notmark.png");
 loadSprite("bean", "gfx/bean.png");
-// loadSprite("enemybullet", "gfx/enemybullet.png");
+loadSprite("enemybullet1", "gfx/enemybullet1.png");
+loadSprite("enemybullet2", "gfx/enemybullet2.png");
+loadSprite("enemybullet3", "gfx/enemybullet3.png");
+loadSprite("enemybullet4", "gfx/enemybullet4.png");
+loadSprite("enemybullet5", "gfx/enemybullet5.png");
+
+loadSound("bonus", "sfx/bonus.ogg");
+loadSound("gameOver", "sfx/gameOver.ogg");
+loadSound("enemyDeath", "sfx/enemyDeath.ogg");
+loadSound("playerDeath", "sfx/playerDeath.ogg");
+loadSound("bonusDeath", "sfx/bonusDeath.ogg");
+loadSound("bulletImpact", "sfx/bulletImpact.ogg");
+loadSound("enemyShoot", "sfx/enemyShoot.ogg");
+loadSound("playerShoot", "sfx/playerShoot.ogg");
+
+loadSound("music", "sfx/music.mp3");
 
 scene("main", (hiScore = 0) => {
     let score = 0;
@@ -21,6 +36,11 @@ scene("main", (hiScore = 0) => {
     let bulletPresent = false;
     let enemyDirection = 1;
     let enemySpeedModifer = 1;
+
+    const music = play("music", {
+        loop: true,
+        volume: musicMuted ? 0 : 1.00
+    });
 
     // Score
     let scoreLabel = add([
@@ -62,17 +82,18 @@ scene("main", (hiScore = 0) => {
     let shoot = () => {
         if (!bulletPresent && !dead) {
             bulletPresent = true;
-            spawnBullet(player.pos, "bullet")
+            playSfx("playerShoot");
+            spawnBullet(player.pos)
         }
     }
-    let spawnBullet = (position, tag) => {
+    let spawnBullet = (position) => {
         add([
             rect(2, 6),
             color(255, 255, 255),
             pos(position),
             origin("center"),
             area(),
-            tag,
+            "bullet",
         ]);
 
     }
@@ -93,7 +114,9 @@ scene("main", (hiScore = 0) => {
     // Player death
     let die = () => {
         dead = true;
+        music.stop();
         destroy(player);
+        playSfx("gameOver");
         destroyAll("bullet");
         shake(12);
         makeExplosion(player.pos, 20, 120, 30, 0.5)
@@ -132,6 +155,7 @@ scene("main", (hiScore = 0) => {
         bulletPresent = false
         destroy(b);
         destroy(e);
+        playSfx("enemyDeath");
         shake(3);
         enemySpeedModifer += 0.1;
         score += 20;
@@ -142,6 +166,7 @@ scene("main", (hiScore = 0) => {
         bulletPresent = false
         destroy(b);
         destroy(e);
+        playSfx("bulletImpact");
         shake(1);
         score += 5;
         makeExplosion(e.pos, 3, 6, 1);
@@ -149,11 +174,14 @@ scene("main", (hiScore = 0) => {
     onCollide("player", "enemy", (p, e) => {
         die();
         destroy(e);
+        playSfx("enemyDeath");
+        shake(1);
         makeExplosion(e.pos, 4, 8, 1);
     });
     onCollide("player", "enemyBullet", (p, e) => {
         die();
         destroy(e);
+        playSfx("bulletImpact");
         makeExplosion(e.pos, 4, 8, 1);
     });
     onUpdate("enemy", (e) => {
@@ -166,13 +194,27 @@ scene("main", (hiScore = 0) => {
                     e.pos.y = e.pos.y + 5
                 })
             } 
-            if (rand(1, 10000) < 2 + enemySpeedModifer) spawnBullet(e.pos, "enemyBullet");
+            if (rand(1, 10000) < 2 + enemySpeedModifer) spawnEnemyBullet(e.pos, "enemyBullet");
         }
     });
+    let spawnEnemyBullet = (position) => {
+        const spriteStr = "enemybullet" + randi(1, 6)
+        playSfx("enemyShoot");
+        add([
+            sprite(spriteStr),
+            color(255, 255, 255),
+            pos(position),
+            origin("center"),
+            area(),
+            "enemyBullet",
+        ]);
+
+    }
 
     // Bonuses
     let spawnBonus = () => {
         let direction = rand(-1, 1) > 0 ? 1 : -1;
+        playSfx("bonus");
         add([
             sprite("bean"),
             scale(1),
@@ -198,6 +240,7 @@ scene("main", (hiScore = 0) => {
         bulletPresent = false
         destroy(b);
         destroy(e);
+        playSfx("bonusDeath");
         shake(3);
         score += 500;
         makeExplosion(e.pos, 5, 10, 1);
@@ -273,6 +316,5 @@ scene("main", (hiScore = 0) => {
 go("menu");
 
 // TODO
-// Enemy bullet zig zags
 // Starfield
 // Barriers
