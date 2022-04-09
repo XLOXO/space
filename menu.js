@@ -231,4 +231,4 @@ scene("credits", (hiScore = 0) => {
     onKeyDown("1", () => { go("menu", hiScore); });
 });
 
-// go("menu");
+go("menu", localStorage.getItem('hiscore') || 0);

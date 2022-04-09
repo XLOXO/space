@@ -65,6 +65,7 @@ scene("main", (hiScore = 0) => {
     onUpdate("hiScoreLabel", () => {
         if (score > hiScore) {
             hiScore = score;
+            localStorage.setItem('hiscore', hiScore);
         }
         hiScoreLabel.text = "HI " + String(hiScore).padStart(10, 0);
     })
@@ -338,9 +339,3 @@ scene("main", (hiScore = 0) => {
     spawnBonusLoop();
     spawnStarLoop();
 });
-
-go("menu");
-
-// TODO
-// Starfield
-// Barriers
