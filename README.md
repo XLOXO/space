@@ -1,6 +1,6 @@
 # Mark Invaders
 
-Mark Invaders is a Space Invaders clone written in JavaScript with [Kaboom.js](https://kaboomjs.com/) made for both the [MarkJam](https://itch.io/jam/mark-jam) and [OGAM11](https://itch.io/jam/one-game-a-month-11).
+Mark Invaders is a Space Invaders clone written in JavaScript with [Kaboom.js](https://kaboomjs.com/) made for both the [MarkJam](https://itch.io/jam/mark-jam) and [OGAM11](https://itch.io/jam/one-game-a-month-11). The game is available to play, for free, in your browser at: https://swilliamsio.itch.io/mark-invaders
 
 ![A screenshot of Mark Invaders](img/img3.png "Thrilling?")
 
