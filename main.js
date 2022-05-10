@@ -65,7 +65,9 @@ scene("main", (hiScore = 0) => {
     onUpdate("hiScoreLabel", () => {
         if (score > hiScore) {
             hiScore = score;
-            localStorage.setItem('hiscore', hiScore);
+            try {
+                localStorage.setItem('hiscore', hiScore);
+            } catch { }
         }
         hiScoreLabel.text = "HI " + String(hiScore).padStart(10, 0);
     })
